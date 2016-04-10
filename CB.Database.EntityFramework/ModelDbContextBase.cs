@@ -7,16 +7,21 @@ namespace CB.Database.EntityFramework
 {
     public abstract class ModelDbContextBase<TDbContext> where TDbContext: DbContext, new()
     {
-        protected virtual Task<TResult> FetchDataContextAsync<TResult>(Func<TDbContext, Task<TResult>> fetchContextAsync)
-        {
-            return FetchDataContext(fetchContextAsync);
-        }
-
+        #region Implementation
         protected virtual TResult FetchDataContext<TResult>(Func<TDbContext, TResult> fetchContext)
         {
             using (var context = new TDbContext())
             {
                 return fetchContext(context);
+            }
+        }
+
+        protected virtual async Task<TResult> FetchDataContextAsync<TResult>(
+            Func<TDbContext, Task<TResult>> fetchContextAsync)
+        {
+            using (var context = new TDbContext())
+            {
+                return await fetchContextAsync(context);
             }
         }
 
@@ -29,9 +34,14 @@ namespace CB.Database.EntityFramework
             });
         }
 
-/*        private static Task UseDataContextAsync(Func<TDbContext, Task> useContextAsync)
+        protected virtual async Task UseDataContextAsync(Func<TDbContext, Task> useContextAsync)
         {
-            return FetchDataContextAsync<Task>(context => useContextAsync(context));
-        }*/
+            await FetchDataContextAsync<object>(async context =>
+            {
+                await useContextAsync(context);
+                return null;
+            });
+        }
+        #endregion
     }
 }
