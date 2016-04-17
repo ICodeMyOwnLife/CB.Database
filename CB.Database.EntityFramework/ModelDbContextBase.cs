@@ -11,28 +11,12 @@ namespace CB.Database.EntityFramework
     public abstract class ModelDbContextBase<TDbContext> where TDbContext: DbContext, new()
     {
         #region Implementation
-        /*protected virtual void DeleteModel<TModel>(int modelId, Func<TDbContext, DbSet<TModel>> getModelSet)
-            where TModel: IdModelBase, new()
-            => UseDataContext(context =>
-            {
-                MarkDeletedModel<TModel>(modelId, context);
-                context.SaveChanges();
-            });*/
-
         protected virtual void DeleteModel<TModel>(int modelId) where TModel: IdModelBase, new()
             => UseDataContext(context =>
             {
                 MarkDeletedModel<TModel>(modelId, context);
                 context.SaveChanges();
             });
-
-        /*protected virtual async Task DeleteModelAsync<TModel>(int modelId, Func<TDbContext, DbSet<TModel>> getModelSet)
-            where TModel: IdModelBase, new()
-            => await UseDataContextAsync(async context =>
-            {
-                MarkDeletedModel<TModel>(modelId, context);
-                await context.SaveChangesAsync();
-            });*/
 
         protected virtual async Task DeleteModelAsync<TModel>(int modelId) where TModel: IdModelBase, new()
             => await UseDataContextAsync(async context =>
@@ -58,19 +42,11 @@ namespace CB.Database.EntityFramework
             }
         }
 
-        /*protected virtual TModel GetModel<TModel>(int modelId, Func<TDbContext, DbSet<TModel>> getModelSet)
-            where TModel: class
-            => FetchDataContext(context => GetModel(modelId, getModelSet(context)));*/
-
         protected virtual TModel GetModel<TModel>(int modelId) where TModel: class
             => FetchDataContext(context => GetModel(modelId, GetModelSet<TModel>(context)));
 
         private static TModel GetModel<TModel>(int modelId, IDbSet<TModel> modelSet) where TModel: class
             => modelSet.Find(modelId);
-
-        /*protected virtual async Task<TModel> GetModelAsync<TModel>(int modelId,
-            Func<TDbContext, DbSet<TModel>> getModelSet) where TModel: class
-            => await FetchDataContextAsync(async context => await GetModelAsync(modelId, getModelSet(context)));*/
 
         protected virtual async Task<TModel> GetModelAsync<TModel>(int modelId) where TModel: class
             => await FetchDataContextAsync(async context => await GetModelAsync(modelId, GetModelSet<TModel>(context)));
@@ -79,17 +55,11 @@ namespace CB.Database.EntityFramework
             where TModel: class
             => await modelSet.FindAsync(modelId);
 
-        /*protected virtual TModel[] GetModels<TModel>(Func<TDbContext, IQueryable<TModel>> getModelSet)
-            => FetchDataContext(context => getModelSet(context).ToArray());*/
-
         protected virtual TModel[] GetModels<TModel>() where TModel: class
             => FetchDataContext(context => GetModelSet<TModel>(context).ToArray());
 
         protected virtual TModel[] GetModels<TModel>(Func<TModel, bool> predicate) where TModel: class
             => FetchDataContext(context => GetModelSet<TModel>(context).Where(predicate).ToArray());
-
-        /*protected virtual async Task<TModel[]> GetModelsAsync<TModel>(Func<TDbContext, IQueryable<TModel>> getModelSet)
-            => await FetchDataContextAsync(async context => await getModelSet(context).ToArrayAsync());*/
 
         protected virtual async Task<TModel[]> GetModelsAsync<TModel>() where TModel: class
             => await FetchDataContextAsync(async context => await GetModelSet<TModel>(context).ToArrayAsync());
@@ -121,15 +91,6 @@ namespace CB.Database.EntityFramework
                                                 ? EntityState.Added
                                                 : EntityState.Modified;
 
-        /*protected virtual TModel SaveModel<TModel>(TModel model, Func<TDbContext, DbSet<TModel>> getModelSet)
-            where TModel: IdModelBase
-            => FetchDataContext(context =>
-            {
-                MarkSavedModel(model, context);
-                context.SaveChanges();
-                return model;
-            });*/
-
         protected virtual TModel SaveModel<TModel>(TModel model) where TModel: IdModelBase
             => FetchDataContext(context =>
             {
@@ -137,15 +98,6 @@ namespace CB.Database.EntityFramework
                 context.SaveChanges();
                 return model;
             });
-
-        /*protected virtual async Task<TModel> SaveModelAsync<TModel>(TModel model,
-            Func<TDbContext, DbSet<TModel>> getModelSet) where TModel: IdModelBase
-            => await FetchDataContextAsync(async context =>
-            {
-                MarkSavedModel(model, context);
-                await context.SaveChangesAsync();
-                return model;
-            });*/
 
         protected virtual async Task<TModel> SaveModelAsync<TModel>(TModel model) where TModel: IdModelBase
             => await FetchDataContextAsync(async context =>
