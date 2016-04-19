@@ -11,6 +11,11 @@ namespace CB.Database.EntityFramework
     public abstract class ModelDbContextBase<TDbContext> where TDbContext: DbContext, new()
     {
         #region Implementation
+        protected virtual TDbContext CreateContext()
+        {
+            return new TDbContext();
+        }
+
         protected virtual void DeleteModel<TModel>(int modelId) where TModel: IdModelBase, new()
             => UseDataContext(context =>
             {
@@ -27,7 +32,7 @@ namespace CB.Database.EntityFramework
 
         protected virtual TResult FetchDataContext<TResult>(Func<TDbContext, TResult> fetchContext)
         {
-            using (var context = new TDbContext())
+            using (var context = CreateContext())
             {
                 return fetchContext(context);
             }
