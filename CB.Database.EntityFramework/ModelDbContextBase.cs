@@ -80,6 +80,9 @@ namespace CB.Database.EntityFramework
         protected virtual TModel[] GetModels<TModel>(Func<TModel, bool> predicate) where TModel: class
             => FetchDataContext(context => GetModelSet<TModel>(context).Where(predicate).ToArray());
 
+        protected virtual TModel[] GetModelsWithNoTracking<TModel>(Func<TModel, bool> predicate) where TModel : class
+            => FetchDataContext(context => GetModelSet<TModel>(context).AsNoTracking().Where(predicate).ToArray());
+
         protected virtual async Task<TModel[]> GetModelsAsync<TModel>() where TModel: class
             => await FetchDataContextAsync(async context => await GetModelSet<TModel>(context).ToArrayAsync());
 
@@ -87,6 +90,11 @@ namespace CB.Database.EntityFramework
             where TModel: class
             => await FetchDataContextAsync(async context
                                            => await GetModelSet<TModel>(context).Where(predicate).ToArrayAsync());
+
+        protected virtual async Task<TModel[]> GetModelsWithNoTrackingAsync<TModel>(Expression<Func<TModel, bool>> predicate)
+            where TModel : class
+            => await FetchDataContextAsync(async context
+                                           => await GetModelSet<TModel>(context).AsNoTracking().Where(predicate).ToArrayAsync());
 
         private static DbSet<TModel> GetModelSet<TModel>(TDbContext context) where TModel: class
         {
