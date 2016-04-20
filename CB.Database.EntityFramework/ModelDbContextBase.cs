@@ -16,11 +16,25 @@ namespace CB.Database.EntityFramework
             return new TDbContext();
         }
 
+        protected virtual void DeleteMode<TModel>(TModel model) where TModel: IdModelBase
+            => UseDataContext(context =>
+            {
+                MarkDeletedModel(model, context);
+                context.SaveChanges();
+            });
+
         protected virtual void DeleteModel<TModel>(int modelId) where TModel: IdModelBase, new()
             => UseDataContext(context =>
             {
                 MarkDeletedModel<TModel>(modelId, context);
                 context.SaveChanges();
+            });
+
+        protected virtual async Task DeleteModelAsync<TModel>(TModel model) where TModel: IdModelBase, new()
+            => await UseDataContextAsync(async context =>
+            {
+                MarkDeletedModel(model, context);
+                await context.SaveChangesAsync();
             });
 
         protected virtual async Task DeleteModelAsync<TModel>(int modelId) where TModel: IdModelBase, new()
@@ -88,8 +102,18 @@ namespace CB.Database.EntityFramework
             return dbSetProp.GetValue(context) as DbSet<TModel>;
         }
 
+        protected virtual TModel[] GetModelsWithNoTracking<TModel>() where TModel: class
+            => FetchDataContext(context => GetModelSet<TModel>(context).AsNoTracking().ToArray());
+
+        protected virtual async Task<TModel[]> GetModelsWithNoTrackingAsync<TModel>() where TModel: class
+            => await FetchDataContextAsync(async context
+                                           => await GetModelSet<TModel>(context).AsNoTracking().ToArrayAsync());
+
         private static void MarkDeletedModel<TModel>(int modelId, TDbContext context) where TModel: IdModelBase, new()
-            => context.Entry(new TModel { Id = modelId }).State = EntityState.Deleted;
+            => MarkDeletedModel(new TModel { Id = modelId }, context);
+
+        private static void MarkDeletedModel<TModel>(TModel model, TDbContext context) where TModel: IdModelBase
+            => context.Entry(model).State = EntityState.Deleted;
 
         private static void MarkSavedModel<TModel>(TModel model, TDbContext context) where TModel: IdModelBase
             => context.Entry(model).State = !model.Id.HasValue || model.Id.Value == 0
