@@ -75,26 +75,20 @@ namespace CB.Database.EntityFramework
             => await modelSet.FindAsync(modelId);
 
         protected virtual TModel[] GetModels<TModel>() where TModel: class
-            => FetchDataContext(context => GetModelSet<TModel>(context).ToArray());
+            => GetModelSet<TModel>().ToArray();
 
         protected virtual TModel[] GetModels<TModel>(Func<TModel, bool> predicate) where TModel: class
-            => FetchDataContext(context => GetModelSet<TModel>(context).Where(predicate).ToArray());
-
-        protected virtual TModel[] GetModelsWithNoTracking<TModel>(Func<TModel, bool> predicate) where TModel : class
-            => FetchDataContext(context => GetModelSet<TModel>(context).AsNoTracking().Where(predicate).ToArray());
+            => GetModelSet<TModel>().Where(predicate).ToArray();
 
         protected virtual async Task<TModel[]> GetModelsAsync<TModel>() where TModel: class
-            => await FetchDataContextAsync(async context => await GetModelSet<TModel>(context).ToArrayAsync());
+            => await GetModelSet<TModel>().ToArrayAsync();
 
         protected virtual async Task<TModel[]> GetModelsAsync<TModel>(Expression<Func<TModel, bool>> predicate)
             where TModel: class
-            => await FetchDataContextAsync(async context
-                                           => await GetModelSet<TModel>(context).Where(predicate).ToArrayAsync());
+            => await GetModelSet<TModel>().Where(predicate).ToArrayAsync();
 
-        protected virtual async Task<TModel[]> GetModelsWithNoTrackingAsync<TModel>(Expression<Func<TModel, bool>> predicate)
-            where TModel : class
-            => await FetchDataContextAsync(async context
-                                           => await GetModelSet<TModel>(context).AsNoTracking().Where(predicate).ToArrayAsync());
+        protected virtual DbSet<TModel> GetModelSet<TModel>() where TModel: class
+            => FetchDataContext(GetModelSet<TModel>);
 
         private static DbSet<TModel> GetModelSet<TModel>(TDbContext context) where TModel: class
         {
@@ -110,12 +104,18 @@ namespace CB.Database.EntityFramework
             return dbSetProp.GetValue(context) as DbSet<TModel>;
         }
 
+        protected virtual TModel[] GetModelsWithNoTracking<TModel>(Func<TModel, bool> predicate) where TModel: class
+            => GetModelSet<TModel>().AsNoTracking().Where(predicate).ToArray();
+
         protected virtual TModel[] GetModelsWithNoTracking<TModel>() where TModel: class
-            => FetchDataContext(context => GetModelSet<TModel>(context).AsNoTracking().ToArray());
+            => GetModelSet<TModel>().AsNoTracking().ToArray();
+
+        protected virtual async Task<TModel[]> GetModelsWithNoTrackingAsync<TModel>(
+            Expression<Func<TModel, bool>> predicate) where TModel: class
+            => await GetModelSet<TModel>().AsNoTracking().Where(predicate).ToArrayAsync();
 
         protected virtual async Task<TModel[]> GetModelsWithNoTrackingAsync<TModel>() where TModel: class
-            => await FetchDataContextAsync(async context
-                                           => await GetModelSet<TModel>(context).AsNoTracking().ToArrayAsync());
+            => await GetModelSet<TModel>().AsNoTracking().ToArrayAsync();
 
         private static void MarkDeletedModel<TModel>(int modelId, TDbContext context) where TModel: IdModelBase, new()
             => MarkDeletedModel(new TModel { Id = modelId }, context);
