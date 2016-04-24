@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -62,6 +63,23 @@ namespace CB.Database.EntityFramework
             }
         }
 
+        protected virtual TResult FetchIncludedModelSet<TModel, TResult>(Func<DbQuery<TModel>, TResult> fetchQuery,
+            string[] inclusions) where TModel: class
+            => FetchModelSet<TModel, TResult>(modelSet =>
+            {
+                var query = IncludeToModelSet(modelSet, inclusions);
+                return fetchQuery(query);
+            });
+
+        protected virtual async Task<TResult> FetchIncludedModelSetAsync<TModel, TResult>(
+            Func<DbQuery<TModel>, Task<TResult>> fetchQuery,
+            string[] inclusions) where TModel: class
+            => await FetchModelSetAsync<TModel, TResult>(async modelSet =>
+            {
+                var query = IncludeToModelSet(modelSet, inclusions);
+                return await fetchQuery(query);
+            });
+
         protected virtual TResult FetchModelSet<TModel, TResult>(Func<DbSet<TModel>, TResult> fetchModelSet)
             where TModel: class
             => FetchDataContext(context =>
@@ -91,27 +109,29 @@ namespace CB.Database.EntityFramework
             where TModel: class
             => await modelSet.FindAsync(modelId);
 
-        protected virtual TModel[] GetModels<TModel>() where TModel: class
-            => FetchModelSet<TModel, TModel[]>(modelSet => modelSet.ToArray());
+        protected virtual TModel[] GetModels<TModel>(params string[] inclusions) where TModel: class
+            => FetchIncludedModelSet<TModel, TModel[]>(query => query.ToArray(), inclusions);
 
-        protected virtual TModel[] GetModels<TModel>(Func<IEnumerable<TModel>, IEnumerable<TModel>> transform)
+        protected virtual TModel[] GetModels<TModel>(Func<IEnumerable<TModel>, IEnumerable<TModel>> transformModelSet,
+            params string[] inclusions) where TModel: class
+            => FetchIncludedModelSet<TModel, TModel[]>(query => transformModelSet(query).ToArray(), inclusions);
+
+        protected virtual TModel[] GetModels<TModel>(Func<TModel, bool> predicate, params string[] inclusions)
             where TModel: class
-            => FetchModelSet<TModel, TModel[]>(modelSet => transform(modelSet).ToArray());
+            => FetchIncludedModelSet<TModel, TModel[]>(query => query.Where(predicate).ToArray(), inclusions);
 
-        protected virtual TModel[] GetModels<TModel>(Func<TModel, bool> predicate) where TModel: class
-            => FetchModelSet<TModel, TModel[]>(modelSet => modelSet.Where(predicate).ToArray());
-
-        protected virtual async Task<TModel[]> GetModelsAsync<TModel>() where TModel: class
-            => await FetchModelSetAsync<TModel, TModel[]>(async modelSet => await modelSet.ToArrayAsync());
+        protected virtual async Task<TModel[]> GetModelsAsync<TModel>(params string[] inclusions) where TModel: class
+            => await FetchIncludedModelSetAsync<TModel, TModel[]>(async query => await query.ToArrayAsync(), inclusions);
 
         protected virtual async Task<TModel[]> GetModelsAsync<TModel>(
-            Func<IQueryable<TModel>, IQueryable<TModel>> transform) where TModel: class
-            => await FetchModelSetAsync<TModel, TModel[]>(async modelSet => await transform(modelSet).ToArrayAsync());
+            Func<IQueryable<TModel>, IQueryable<TModel>> transform, params string[] inclusions) where TModel: class
+            => await FetchIncludedModelSetAsync<TModel, TModel[]>(async query
+                                                                  => await transform(query).ToArrayAsync(), inclusions);
 
-        protected virtual async Task<TModel[]> GetModelsAsync<TModel>(Expression<Func<TModel, bool>> predicate)
-            where TModel: class
-            => await FetchModelSetAsync<TModel, TModel[]>(async modelSet
-                                                          => await modelSet.Where(predicate).ToArrayAsync());
+        protected virtual async Task<TModel[]> GetModelsAsync<TModel>(Expression<Func<TModel, bool>> predicate,
+            params string[] inclusions) where TModel: class
+            => await FetchIncludedModelSetAsync<TModel, TModel[]>(
+                async query => await query.Where(predicate).ToArrayAsync(), inclusions);
 
         private static DbSet<TModel> GetModelSet<TModel>(TDbContext context) where TModel: class
         {
@@ -127,28 +147,34 @@ namespace CB.Database.EntityFramework
             return dbSetProp.GetValue(context) as DbSet<TModel>;
         }
 
-        protected virtual TModel[] GetModelsWithNoTracking<TModel>(Func<TModel, bool> predicate) where TModel: class
-            => GetModelsWithNoTracking<TModel>(models => models.Where(predicate));
+        protected virtual TModel[] GetModelsWithNoTracking<TModel>(Func<TModel, bool> predicate,
+            params string[] inclusions) where TModel: class
+            => GetModelsWithNoTracking<TModel>(models => models.Where(predicate), inclusions);
 
-        protected virtual TModel[] GetModelsWithNoTracking<TModel>() where TModel: class
-            => FetchModelSet<TModel, TModel[]>(modelSet => modelSet.AsNoTracking().ToArray());
+        protected virtual TModel[] GetModelsWithNoTracking<TModel>(params string[] inclusions) where TModel: class
+            => FetchIncludedModelSet<TModel, TModel[]>(query => query.AsNoTracking().ToArray(), inclusions);
 
         protected virtual TModel[] GetModelsWithNoTracking<TModel>(
-            Func<IEnumerable<TModel>, IEnumerable<TModel>> transform) where TModel: class
-            => FetchModelSet<TModel, TModel[]>(modelSet => transform(modelSet.AsNoTracking()).ToArray());
+            Func<IEnumerable<TModel>, IEnumerable<TModel>> transform, params string[] inclusions) where TModel: class
+            => FetchIncludedModelSet<TModel, TModel[]>(query => transform(query.AsNoTracking()).ToArray(), inclusions);
 
         protected virtual async Task<TModel[]> GetModelsWithNoTrackingAsync<TModel>(
-            Func<TModel, bool> predicate) where TModel: class
-            => await GetModelsWithNoTrackingAsync<TModel>(models => models.Where(m => predicate(m)));
+            Func<TModel, bool> predicate, params string[] inclusions) where TModel: class
+            => await GetModelsWithNoTrackingAsync<TModel>(models => models.Where(m => predicate(m)), inclusions);
 
-        protected virtual async Task<TModel[]> GetModelsWithNoTrackingAsync<TModel>() where TModel: class
-            => await FetchModelSetAsync<TModel, TModel[]>(async modelSet
-                                                          => await modelSet.AsNoTracking().ToArrayAsync());
+        protected virtual async Task<TModel[]> GetModelsWithNoTrackingAsync<TModel>(params string[] inclusions)
+            where TModel: class
+            => await FetchIncludedModelSetAsync<TModel, TModel[]>(
+                async query => await query.AsNoTracking().ToArrayAsync(), inclusions);
 
         protected virtual async Task<TModel[]> GetModelsWithNoTrackingAsync<TModel>(
-            Func<IQueryable<TModel>, IQueryable<TModel>> transform) where TModel: class
-            => await FetchModelSetAsync<TModel, TModel[]>(async modelSet
-                                                          => await transform(modelSet.AsNoTracking()).ToArrayAsync());
+            Func<IQueryable<TModel>, IQueryable<TModel>> transform, params string[] inclusions) where TModel: class
+            => await FetchIncludedModelSetAsync<TModel, TModel[]>(
+                async query => await transform(query.AsNoTracking()).ToArrayAsync(), inclusions);
+
+        private static DbQuery<TModel> IncludeToModelSet<TModel>(DbQuery<TModel> modelSet,
+            IEnumerable<string> inclusions) where TModel: class
+            => inclusions.Aggregate(modelSet, (current, t) => current.Include(t));
 
         private static void MarkDeletedModel<TModel>(int modelId, TDbContext context) where TModel: IdModelBase, new()
             => MarkDeletedModel(new TModel { Id = modelId }, context);
