@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CB.Database.AdoDotNet", "CB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CB.Model.Common", "..\CB.Model\CB.Model.Common\CB.Model.Common.csproj", "{33A5DF99-1312-4023-A6EF-EABB9848F5A6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CB.Database.TestEntityFramwork", "CB.Database.TestEntityFramwork\CB.Database.TestEntityFramwork.csproj", "{F6429C4A-4FBC-43B8-81DD-F519FACEBADB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{33A5DF99-1312-4023-A6EF-EABB9848F5A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33A5DF99-1312-4023-A6EF-EABB9848F5A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33A5DF99-1312-4023-A6EF-EABB9848F5A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6429C4A-4FBC-43B8-81DD-F519FACEBADB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6429C4A-4FBC-43B8-81DD-F519FACEBADB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6429C4A-4FBC-43B8-81DD-F519FACEBADB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6429C4A-4FBC-43B8-81DD-F519FACEBADB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
