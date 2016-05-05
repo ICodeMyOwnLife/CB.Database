@@ -189,7 +189,7 @@ namespace CB.Database.EntityFramework
             where TModel: class
             => FetchDataContext(context =>
             {
-                var modelSet = GetModelSet<TModel>(context);
+                var modelSet = context.Set<TModel>();
                 return fetchModelSet(modelSet);
             });
 
@@ -197,35 +197,35 @@ namespace CB.Database.EntityFramework
             Func<DbSet<TModel>, Task<TResult>> fetchModelSet) where TModel: class
             => await FetchDataContextAsync(async context =>
             {
-                var modelSet = GetModelSet<TModel>(context);
+                var modelSet = context.Set<TModel>();
                 return await fetchModelSet(modelSet);
             });
 
         private static TModel GetModel<TModel>(TDbContext context, object[] keyValues) where TModel: class
-            => GetModelSet<TModel>(context).Find(keyValues);
+            => context.Set<TModel>().Find(keyValues);
 
         protected virtual TModel GetModel<TModel>(params object[] keyValues) where TModel: class
             => FetchDataContext(context => GetModel<TModel>(context, keyValues));
 
-        private static async Task<TModel> GetModelAsync<TModel>(TDbContext context, object[] keyValues)
-            where TModel: class
-            => await GetModelSet<TModel>(context).FindAsync(keyValues);
-
-        /*protected virtual TModel GetModel<TModel>(int modelId) where TModel: class
-            => FetchDataContext(context => GetModel(modelId, GetModelSet<TModel>(context)));
+        protected virtual TModel GetModel<TModel>(int modelId) where TModel: class
+            => FetchDataContext(context => GetModel(modelId, context.Set<TModel>()));
 
         private static TModel GetModel<TModel>(int modelId, IDbSet<TModel> modelSet) where TModel: class
-            => modelSet.Find(modelId);*/
+            => modelSet.Find(modelId);
+
+        private static async Task<TModel> GetModelAsync<TModel>(TDbContext context, object[] keyValues)
+            where TModel: class
+            => await context.Set<TModel>().FindAsync(keyValues);
 
         protected virtual async Task<TModel> GetModelAsync<TModel>(params object[] keyValues) where TModel: class
             => await FetchDataContextAsync(async context => await GetModelAsync<TModel>(context, keyValues));
 
-        /*protected virtual async Task<TModel> GetModelAsync<TModel>(int modelId) where TModel: class
-            => await FetchDataContextAsync(async context => await GetModelAsync(modelId, GetModelSet<TModel>(context)));
+        protected virtual async Task<TModel> GetModelAsync<TModel>(int modelId) where TModel: class
+            => await FetchDataContextAsync(async context => await GetModelAsync(modelId, context.Set<TModel>()));
 
         private static async Task<TModel> GetModelAsync<TModel>(int modelId, DbSet<TModel> modelSet)
             where TModel: class
-            => await modelSet.FindAsync(modelId);*/
+            => await modelSet.FindAsync(modelId);
 
         protected virtual TModel[] GetModels<TModel>(params string[] inclusions) where TModel: class
             => FetchIncludedModelSet<TModel, TModel[]>(query => query.ToArray(), inclusions);
@@ -279,7 +279,7 @@ namespace CB.Database.EntityFramework
             Expression<Func<TModel, TProperty>> path) where TModel: class
             => await FetchIncludedModelSetAsync(async query => await query.Where(predicate).ToArrayAsync(), path);
 
-        private static DbSet<TModel> GetModelSet<TModel>(TDbContext context) where TModel: class
+        /*private static DbSet<TModel> GetModelSet<TModel>(TDbContext context) where TModel: class
         {
             Type contextType = typeof(TDbContext),
                  dbSetType = typeof(DbSet<TModel>);
@@ -291,7 +291,7 @@ namespace CB.Database.EntityFramework
                 throw new InvalidOperationException($"Cannot find a property of type {dbSetType} in {contextType}");
             }
             return dbSetProp.GetValue(context) as DbSet<TModel>;
-        }
+        }*/
 
         protected virtual TModel[] GetModelsWithNoTracking<TModel>(Func<TModel, bool> predicate,
             params string[] inclusions) where TModel: class

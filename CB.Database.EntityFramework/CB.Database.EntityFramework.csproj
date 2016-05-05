@@ -52,7 +52,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EntityManager.cs" />
+    <Compile Include="IEntityDataAccess.cs" />
     <Compile Include="ModelDbContextBase.cs" />
+    <Compile Include="NoTrackingEntityDataAccess.cs" />
+    <Compile Include="NoTrackingIdEntityDataAccess.cs" />
+    <Compile Include="NoTrackingModelDbContextBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
