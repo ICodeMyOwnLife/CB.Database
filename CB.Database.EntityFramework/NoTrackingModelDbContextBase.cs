@@ -61,16 +61,16 @@ namespace CB.Database.EntityFramework
         public virtual TModel GetModel<TModel>(params object[] keyValues) where TModel: class
             => FetchDataContext(context => GetModel<TModel>(context, keyValues));
 
-        public virtual TModel GetModel<TModel>(TModel inModel) where TModel: class
-            => GetModel<TModel>(_entityManager.GetEntityIdValues(inModel).ToArray());
+        /*public virtual TModel GetModel<TModel>(TModel inModel) where TModel: class
+            => GetModel<TModel>(_entityManager.GetEntityIdValues(inModel).ToArray());*/
 
         public virtual TModel GetModel<TModel>(int modelId) where TModel: class
             => FetchDataContext(context => GetModel(modelId, context.Set<TModel>()));
 
 
 
-        public virtual async Task<TModel> GetModelAsync<TModel>(TModel inModel) where TModel: class
-            => await GetModelAsync<TModel>(_entityManager.GetEntityIdValues(inModel).ToArray());
+        /*public virtual async Task<TModel> GetModelAsync<TModel>(TModel inModel) where TModel: class
+            => await GetModelAsync<TModel>(_entityManager.GetEntityIdValues(inModel).ToArray());*/
 
         public virtual async Task<TModel> GetModelAsync<TModel>(params object[] keyValues) where TModel: class
             => await FetchDataContextAsync(async context => await GetModelAsync<TModel>(context, keyValues));
@@ -178,12 +178,12 @@ namespace CB.Database.EntityFramework
         /*public void RegisterDependent<TModel, TProperty>(Expression<Func<TModel, TProperty>> propertyExpression)
             => _entityManager.AddDependent(propertyExpression);*/
 
-        public void RegisterDependentProperties<TModel>(
+        /*public void RegisterDependentProperties<TModel>(
             params Expression<Func<TModel, object>>[] dependentPropertyExpressions)
-            => _entityManager.AddDependentProperties(dependentPropertyExpressions);
+            => _entityManager.AddDependent(dependentPropertyExpressions);*/
 
-        public void RegisterIdProperties<TModel>(params Expression<Func<TModel, object>>[] idPropertyExpressions)
-            => _entityManager.AddIdProperties(idPropertyExpressions);
+        /*public void RegisterIdProperties<TModel>(params Expression<Func<TModel, object>>[] idPropertyExpressions)
+            => _entityManager.AddIdProperties(idPropertyExpressions);*/
 
         public virtual TModel SaveModel<TModel>(TModel model) where TModel: class
             => FetchDataContext(context =>
@@ -351,7 +351,7 @@ namespace CB.Database.EntityFramework
         {
             //context.Entry(model).
             context.Entry(model).State = IsModelExists(model) ? EntityState.Modified : EntityState.Added;
-            _entityManager.SetPropertiesState(model, context, EntityState.Modified);
+            //_entityManager.SetPropertiesState(model, context, EntityState.Modified);
         }
 
         protected virtual void UseDataContext(Action<TDbContext> useContext)

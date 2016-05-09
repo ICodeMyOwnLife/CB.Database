@@ -52,13 +52,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DependentPropertyDictionary.cs" />
+    <Compile Include="EntityDataAccessBase.cs" />
     <Compile Include="EntityManager.cs" />
     <Compile Include="IEntityDataAccess.cs" />
+    <Compile Include="IEntityDataQuery.cs" />
+    <Compile Include="IEntityDataQueryAsync.cs" />
+    <Compile Include="IEntityDataQuerySync.cs" />
+    <Compile Include="IIdEntityDataQuery.cs" />
+    <Compile Include="IIdEntityDataQueryAsync.cs" />
+    <Compile Include="IIdEntityDataQuerySync.cs" />
     <Compile Include="ModelDbContextBase.cs" />
-    <Compile Include="NoTrackingEntityDataAccess.cs" />
+    <Compile Include="ModelInfo.cs" />
+    <Compile Include="NoTrackingIdEntityDataQuery.cs" />
+    <Compile Include="NoTrackingEntityDataAccessBase.cs" />
     <Compile Include="NoTrackingIdEntityDataAccess.cs" />
     <Compile Include="NoTrackingModelDbContextBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TrackingEntityDataAccessBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

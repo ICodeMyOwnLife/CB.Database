@@ -4,80 +4,12 @@ using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading.Tasks;
 using CB.Model.Common;
 
 
 namespace CB.Database.EntityFramework
 {
-    public class ModelInfo
-    {
-        #region  Properties & Indexers
-        public PropertyInfo Id { get; set; }
-        public PropertyInfo Property { get; set; }
-        public PropertyInfo PropertyId { get; set; }
-        #endregion
-
-
-        #region Methods
-        public object GetProperty(object source)
-            => Property.GetValue(source);
-        #endregion
-    }
-
-    public class DependentPropertyDictionary
-    {
-        #region Fields
-        readonly IDictionary<Type, IList<ModelInfo>> _dependentDictionary =
-            new Dictionary<Type, IList<ModelInfo>>();
-        #endregion
-
-
-        #region Methods
-        public void Add<TModel>(PropertyInfo property, PropertyInfo id, PropertyInfo propertyId)
-            => Add(typeof(TModel), property, id, propertyId);
-
-        public void Add<TModel, TProperty, TId>(Expression<Func<TModel, TProperty>> propertyExpression,
-            Expression<Func<TModel, TId>> idExpression, Expression<Func<TProperty, TId>> propertyIdExpression)
-            =>
-                Add<TModel>(propertyExpression.GetPropertyInfo(), idExpression.GetPropertyInfo(),
-                    propertyIdExpression.GetPropertyInfo());
-
-        public IEnumerable<object> GetProperties<TModel>(TModel model)
-        {
-            if (model == null) return null;
-            var modelType = model.GetType();
-            return _dependentDictionary.ContainsKey(modelType)
-                       ? _dependentDictionary[modelType].Select(mi => mi.GetProperty(model)) : null;
-        }
-        #endregion
-
-
-        #region Implementation
-        private void Add(Type type, PropertyInfo property, PropertyInfo id, PropertyInfo propertyId)
-        {
-            IList<ModelInfo> dependentProperties;
-
-            if (!_dependentDictionary.ContainsKey(type))
-            {
-                dependentProperties = new List<ModelInfo>();
-                _dependentDictionary[type] = dependentProperties;
-            }
-            else
-            {
-                dependentProperties = _dependentDictionary[type];
-            }
-            dependentProperties.Add(new ModelInfo
-            {
-                Property = property,
-                Id = id,
-                PropertyId = propertyId
-            });
-        }
-        #endregion
-    }
-
     public abstract class ModelDbContextBase<TDbContext> where TDbContext: DbContext, new()
     {
         #region Fields
@@ -98,7 +30,7 @@ namespace CB.Database.EntityFramework
                 DeleteModel(context, model);
             });
 
-        protected virtual void DeleteModel<TModel>(TModel model) where TModel: IdModelBase
+        protected virtual void DeleteModel<TModel>(TModel model) where TModel: IdEntityBase
         {
             if (model != null)
                 UseDataContext(context => DeleteModel(context, model));
@@ -110,7 +42,7 @@ namespace CB.Database.EntityFramework
             context.SaveChanges();
         }
 
-        protected virtual void DeleteModel<TModel>(int modelId) where TModel: IdModelBase, new()
+        protected virtual void DeleteModel<TModel>(int modelId) where TModel: IdEntityBase, new()
             => UseDataContext(context =>
             {
                 MarkDeletedModel<TModel>(modelId, context);
@@ -121,7 +53,7 @@ namespace CB.Database.EntityFramework
             => await UseDataContextAsync(
                 async context => await DeleteModelAsync(context, await GetModelAsync<TModel>(context, keyValues)));
 
-        protected virtual async Task DeleteModelAsync<TModel>(TModel model) where TModel: IdModelBase, new()
+        protected virtual async Task DeleteModelAsync<TModel>(TModel model) where TModel: IdEntityBase, new()
         {
             if (model == null) return;
 
@@ -134,7 +66,7 @@ namespace CB.Database.EntityFramework
             await context.SaveChangesAsync();
         }
 
-        protected virtual async Task DeleteModelAsync<TModel>(int modelId) where TModel: IdModelBase, new()
+        protected virtual async Task DeleteModelAsync<TModel>(int modelId) where TModel: IdEntityBase, new()
             => await UseDataContextAsync(async context =>
             {
                 MarkDeletedModel<TModel>(modelId, context);
@@ -322,15 +254,15 @@ namespace CB.Database.EntityFramework
             IEnumerable<string> inclusions) where TModel: class
             => inclusions.Aggregate(modelSet, (current, t) => current.Include(t));
 
-        private static void MarkDeletedModel<TModel>(int modelId, TDbContext context) where TModel: IdModelBase, new()
+        private static void MarkDeletedModel<TModel>(int modelId, TDbContext context) where TModel: IdEntityBase, new()
             => MarkDeletedModel(new TModel { Id = modelId }, context);
 
         private static void MarkDeletedModel<TModel>(TModel model, TDbContext context) where TModel: class
             => context.Entry(model).State = EntityState.Deleted;
 
-        private void MarkSavedModel<TModel>(TModel model, TDbContext context) where TModel: IdModelBase
+        private void MarkSavedModel<TModel>(TModel model, TDbContext context) where TModel: IdEntityBase
         {
-            context.Entry(model).State = !model.Id.HasValue || model.Id.Value == 0
+            context.Entry(model).State = model.Id == 0
                                              ? EntityState.Added
                                              : EntityState.Modified;
             var modelProperties = _dependentPropertyDictionary.GetProperties(model);
@@ -347,7 +279,7 @@ namespace CB.Database.EntityFramework
             Expression<Func<TProperty, TId>> propertyIdExpression)
             => _dependentPropertyDictionary.Add(propertyExpression, idExpression, propertyIdExpression);
 
-        protected virtual TModel SaveModel<TModel>(TModel model) where TModel: IdModelBase
+        protected virtual TModel SaveModel<TModel>(TModel model) where TModel: IdEntityBase
             => FetchDataContext(context =>
             {
                 MarkSavedModel(model, context);
@@ -355,7 +287,7 @@ namespace CB.Database.EntityFramework
                 return model;
             });
 
-        protected virtual async Task<TModel> SaveModelAsync<TModel>(TModel model) where TModel: IdModelBase
+        protected virtual async Task<TModel> SaveModelAsync<TModel>(TModel model) where TModel: IdEntityBase
             => await FetchDataContextAsync(async context =>
             {
                 MarkSavedModel(model, context);

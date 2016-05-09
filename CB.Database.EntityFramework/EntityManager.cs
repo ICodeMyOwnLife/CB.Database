@@ -13,6 +13,14 @@ namespace CB.Database.EntityFramework
         #region  Properties & Indexers
         public PropertyInfo DependentPropertyIdInfo { get; set; }
         public PropertyInfo DependentPropertyInfo { get; set; }
+        public object DependentPropertyValue { get; set; }
+        #endregion
+    }
+
+    public class EntityDependentResetter
+    {
+        #region  Properties & Indexers
+        public object Entity { get; set; }
         #endregion
     }
 
@@ -45,14 +53,26 @@ namespace CB.Database.EntityFramework
             List<EnitityDependentInfo> dependentInfos;
             if (!TryGetDependentInfos<TEntity>(out dependentInfos)) return;
 
-            foreach (var dependentInfo in dependentInfos)
+            dependentInfos.ForEach(dependentInfo =>
             {
-                var property = dependentInfo.DependentPropertyIdInfo.GetValue(entity) as IIdEntity;
-                if (property == null) continue;
+                var propertyValue = dependentInfo.DependentPropertyIdInfo.GetValue(entity) as IIdEntity;
 
-                dependentInfo.DependentPropertyInfo.SetValue(entity, null);
-                dependentInfo.DependentPropertyIdInfo.SetValue(entity, property.Id);
-            }
+                if (propertyValue != null)
+                {
+                    dependentInfo.DependentPropertyInfo.SetValue(entity, null);
+                    dependentInfo.DependentPropertyIdInfo.SetValue(entity, propertyValue.Id);
+                }
+                dependentInfo.DependentPropertyValue = propertyValue;
+            });
+        }
+
+        public void ResetDependent<TEntity>(TEntity entity) where TEntity: IIdEntity
+        {
+            List<EnitityDependentInfo> dependentInfos;
+            if (!TryGetDependentInfos<TEntity>(out dependentInfos)) return;
+
+            dependentInfos.ForEach(
+                dependentInfo => { dependentInfo.DependentPropertyInfo.SetValue(entity, dependentInfo.DependentPropertyValue); });
         }
         #endregion
 
